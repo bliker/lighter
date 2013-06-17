@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Markdown Syntax highlighting</title>
+</head>
+<link rel="stylesheet" href="css/style.css">
+<body>
+    <section spellcheck="false" id="editor" contentEditable="true" autofocus>
+        <div># Ahoj Stanka!</div>
+        <div>Lorem ipsum **dolor** sit amet, consectetur adipisicing elit. Recusandae, nihil, soluta, animi commodi atque facilis rerum ipsam harum laudantium consectetur nesciunt exercitationem *repellat*. Esse, eum, sapiente aliquam ipsam dignissimos __quidem__.</div>
+        <div><br></div>
+        <div>### List</div>
+        <div>- Vec</div>
+        <div>- *Zverina*</div>
+        <div>- Bene</div>
+    </section>
+
+    <script src="https://rangy.googlecode.com/svn/trunk/dev/rangy-core.js"></script>
+    <script src="https://rangy.googlecode.com/svn/trunk/dev/rangy-textrange.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/rule.js"></script>
+    <script src="js/selection.js"></script>
+
+    <script src="js/main.js"></script>
+    <script>
+        selection.init(document.getElementById('editor'));
+        lighter.init(document.getElementById('editor'));
+    </script>
+</body>
+</html>

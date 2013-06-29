@@ -44,4 +44,11 @@ describe('Parsing text and adding marks', function() {
         var replaced = lighter.addMark(string, lighter.match.quote);
         expect(replaced).toBe('<div><span class="lighter quote"><span class="lighter mark">&gt;</span> Quote</div></span>');
     });
+
+    it('for list', function() {
+        var string = '<div>- List</div>';
+        var replaced = lighter.addMark(string, lighter.match.list);
+        expect(replaced).toBe('<div><span class="lighter list">- </span>List</div>');
+    });
+
 });

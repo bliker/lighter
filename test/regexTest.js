@@ -100,17 +100,19 @@ describe('Parsing text and adding marks', function() {
     });
 
     it('for italic', function() {
-        var string = '_Italic_ Not italic _ Italic_ ';
+        var string = 'Stuff _Italic_ Not italic _ Italic_ ';
         var replaced = lighter.addMark(string, lighter.match.italic);
 
         host.innerHTML = replaced;
+
+        console.log(host);
 
         expect(host.children[0].classList.contains('italic')).toBeTruthy();
         expect(host.getElementsByClassName('italic').length).toBe(1);
     });
 
     it('for italic with asterks', function() {
-        var string = '*Italic* Not italic * Italic* ';
+        var string = 'Stuff *Italic* Not italic * Italic* ';
         var replaced = lighter.addMark(string, lighter.match.italic);
 
         host.innerHTML = replaced;

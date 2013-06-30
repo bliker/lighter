@@ -7,7 +7,7 @@ var partials = {
     /**
      * Sometimes nbsp was included
      */
-    space: '[ (?:&nbsp;)]'
+    space: '(?: |(?:&nbsp;))'
 };
 
 var lighter = {
@@ -49,21 +49,22 @@ var lighter = {
         italic: new Rule({
             elClass: 'italic',
             regex: new RegExp(
-                '(?:_(?!' + partials.space + ').+?_)' +
-                '|(?:\\*(?!' + partials.space + ').+?\\*)', 'g'
+                '(?:[^_]_(?!_| |(?:&nbsp;)).+?[^_]_[^_])|' +
+                '(?:[^\\*]\\*(?!\\*| |(?:&nbsp;)).+?[^\\*]\\*[^\\*])', 'g'
             ),
             subregex: /[\*_]/g,
-            fn: function(results) {
-                var careAbout = results.slice(1, -1);
-                careAbout = careAbout.replace(this.subregex, util.wrapMark);
-                return results.charAt(0) + util.wrap(this.elClass, careAbout) + results.substr(-1);
+            // lookbehing is missing :(
+            fn: function (full) {
+                var length = full.length - 2;
+                return full[0] + Object.getPrototypeOf(this).fn.call(this, full.substr(1, length)) + full.substr(-1);
             }
         }),
 
         list: new Rule({
             elClass: 'list',
-            regex: new RegExp(partials.newline+'([\\+\\-\\*]'+partials.space+')', 'g'),
+            regex: new RegExp(partials.newline+'([\\+\\-\\*]'+partials.space + ')', 'g'),
             fn: function(full, newline, content) {
+                console.log(full);
                 return newline + Object.getPrototypeOf(this).fn.call(this, content);
             }
         }),

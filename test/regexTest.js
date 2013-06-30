@@ -121,5 +121,4 @@ describe('Parsing text and adding marks', function() {
         expect(host.getElementsByClassName('italic').length).toBe(1);
     });
 
-
 });

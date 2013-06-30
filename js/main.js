@@ -64,7 +64,6 @@ var lighter = {
             elClass: 'list',
             regex: new RegExp(partials.newline+'([\\+\\-\\*]'+partials.space + ')', 'g'),
             fn: function(full, newline, content) {
-                console.log(full);
                 return newline + Object.getPrototypeOf(this).fn.call(this, content);
             }
         }),
@@ -146,7 +145,7 @@ var lighter = {
     },
 
     /**
-     * Add mark for one type like Heading
+     * Add mark for one type eg. heading, bold
      * @param  {string} content Do it on this string
      * @param  {Rule}   match   Rule to use
      * @return {string}

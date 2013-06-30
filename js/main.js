@@ -1,3 +1,15 @@
+var partials = {
+    /**
+     * Newline can be start of text, or div, or br
+     */
+    newline: '((?:<div>)|(?:<\/?br>)|^)',
+
+    /**
+     * Sometimes nbsp was included
+     */
+    space: '[ (?:&nbsp;)]'
+};
+
 var lighter = {
 
     target: {}, queue: 0,
@@ -11,7 +23,9 @@ var lighter = {
     match: {
         heading: new Rule({
             elClass: 'heading',
-            regex: /((?:<div>)|(?:<\/?br>))(#{1,6}[ (?:&nbsp;)][^<]*)/g,
+            regex: new RegExp(
+                partials.newline + '(#{1,6}' + partials.space + '[^<]*)', 'g'
+            ),
             subregex: /(#{1,6})/g,
             fn: function(full, newline, content) {
                 var headingLevel;
@@ -25,13 +39,19 @@ var lighter = {
 
         bold: new Rule({
             elClass: 'bold',
-            regex: /(?:\*\*.+?\*\*)|(?:__.+?__)/g,
+            regex: new RegExp(
+                '(?:__(?!' + partials.space + ').+?__)' +
+                '|(?:\\*\\*(?!' + partials.space + ').+?\\*\\*)', 'g'
+            ),
             subregex: /(?:\*\*)|(?:__)/g
         }),
 
         italic: new Rule({
             elClass: 'italic',
-            regex: /(?:[^\*]\*[^\*<]+?\*[^\*])|(?:[^_<]_[^_]+?_[^_])/g,
+            regex: new RegExp(
+                '(?:_(?!' + partials.space + ').+?_)' +
+                '|(?:\\*(?!' + partials.space + ').+?\\*)', 'g'
+            ),
             subregex: /[\*_]/g,
             fn: function(results) {
                 var careAbout = results.slice(1, -1);
@@ -42,7 +62,7 @@ var lighter = {
 
         list: new Rule({
             elClass: 'list',
-            regex: /((?:<div>)|(?:<\/?br>))([*+-] )/g,
+            regex: new RegExp(partials.newline+'([\\+\\-\\*]'+partials.space+')', 'g'),
             fn: function(full, newline, content) {
                 return newline + Object.getPrototypeOf(this).fn.call(this, content);
             }
@@ -50,7 +70,7 @@ var lighter = {
 
         quote: new Rule({
             elClass: 'quote',
-            regex: /((?:<div>)|(?:<\/?br>))(&gt; .+)/g,
+            regex: new RegExp(partials.newline+'(&gt;'+partials.space+'.+)', 'g'),
             subregex: /&gt;/,
             fn: function(full, newline, content) {
                 return newline + Object.getPrototypeOf(this).fn.call(this, content);
@@ -100,7 +120,6 @@ var lighter = {
     _execute: function(fnc) {
         this.target.innerHTML = fnc.call(this, this.target.innerHTML);
     },
-
 
     light: function() {
         this._execute(this.addAllMarks);

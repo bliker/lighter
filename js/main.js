@@ -75,6 +75,12 @@ var lighter = {
             fn: function(full, newline, content) {
                 return newline + Object.getPrototypeOf(this).fn.call(this, content);
             }
+        }),
+
+        inlineCode: new Rule({
+            elClass: 'inlineCode',
+            regex: new RegExp('`(?!' + partials.space + ').+?`', 'g'),
+            subregex: /`/g
         })
     },
 

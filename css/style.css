@@ -80,3 +80,9 @@ section:focus {
     display: inline-block;
     font-style: italic;
 }
+
+.lighter.inlineCode {
+    font-family: 'Source Code Pro';
+    background-color: #fafafa;
+    font-size: 0.95em;
+}

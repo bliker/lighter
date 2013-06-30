@@ -121,4 +121,13 @@ describe('Parsing text and adding marks', function() {
         expect(host.getElementsByClassName('italic').length).toBe(1);
     });
 
+    it('for inline code', function() {
+        var string = 'Ima text Ima text `String::shift()` stuff';
+        var replaced = lighter.addMark(string, lighter.match.inlineCode);
+
+        host.innerHTML = replaced;
+
+        expect(host.getElementsByClassName('inlineCode').length).toBe(1);
+    });
+
 });

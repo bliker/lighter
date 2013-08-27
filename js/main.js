@@ -1,15 +1,3 @@
-var partials = {
-    /**
-     * Newline can be start of text, or div, or br
-     */
-    newline: '((?:<div>)|(?:<\/?br>)|^)',
-
-    /**
-     * Sometimes nbsp was included
-     */
-    space: '(?: |(?:&nbsp;))'
-};
-
 var lighter = {
 
     target: {}, queue: 0,
@@ -19,86 +7,6 @@ var lighter = {
 
     // timeout before parsing text
     timeout: 300,
-
-    match: {
-        heading: new Rule({
-
-            elClass: 'heading',
-            regex: new RegExp(
-                partials.newline + '(#{1,6}' + partials.space + '[^<]*)', 'g'
-            ),
-            subregex: /(#{1,6})/g,
-
-            fn: function(full, newline, content) {
-                var headingLevel;
-                content = content.replace(this.subregex, function(mt) {
-                    headingLevel = mt.length;
-                    return util.wrapMark(mt);
-                });
-                return newline + util.wrap(this.elClass + headingLevel, content);
-            }
-
-        }),
-
-        bold: new Rule({
-            elClass: 'bold',
-            regex: new RegExp(
-                '(?:__(?!' + partials.space + ').+?__)' +
-                '|(?:\\*\\*(?!' + partials.space + ').+?\\*\\*)', 'g'
-            ),
-            subregex: /(?:\*\*)|(?:__)/g
-        }),
-
-        italic: new Rule({
-            elClass: 'italic',
-            regex: new RegExp(
-                '(?:[^_]_(?!_| |(?:&nbsp;)).+?[^_]_[^_])|' +
-                '(?:[^\\*]\\*(?!\\*| |(?:&nbsp;)).+?[^\\*]\\*[^\\*])', 'g'
-            ),
-            subregex: /[\*_]/g,
-            fn: function (full) {
-                var length = full.length - 2;
-                return full[0] + Object.getPrototypeOf(this).fn.call(this, full.substr(1, length)) + full.substr(-1);
-            }
-        }),
-
-        list: new Rule({
-            elClass: 'list',
-            regex: new RegExp(partials.newline+'([\\+\\-\\*]'+partials.space + ')', 'g'),
-            fn: function(full, newline, content) {
-                return newline + Object.getPrototypeOf(this).fn.call(this, content);
-            }
-        }),
-
-        quote: new Rule({
-            elClass: 'quote',
-            regex: new RegExp(partials.newline + '(&gt;' + partials.space + '.+)', 'g'),
-            subregex: /&gt;/g,
-            fn: function(full, newline, content) {
-                return newline + Object.getPrototypeOf(this).fn.call(this, content);
-            }
-        }),
-
-        codeInline: new Rule({
-            elClass: 'codeInline',
-            regex: new RegExp('[^`]`(?!`| |(?:&nbsp;)).+?[^`]`[^`]', 'g'),
-            subregex: /`/g,
-            fn: function (full) {
-                var length = full.length - 2;
-                return full[0] + Object.getPrototypeOf(this).fn.call(this, full.substr(1, length)) + full.substr(-1);
-            }
-        }),
-
-        codeBlock: new Rule({
-            elClass: 'codeBlock',
-            regex: new RegExp(partials.newline + '(```[^]+?```.+)', 'g'),
-            subregex: /```/g,
-            fn: function(full, newline, content) {
-                console.log(full);
-                return '<span class="lighter codeBlock">' + full + '</span>';
-            }
-        })
-    },
 
     init: function(target) {
         this.target = target;

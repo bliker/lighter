@@ -22,11 +22,13 @@ var lighter = {
 
     match: {
         heading: new Rule({
+
             elClass: 'heading',
             regex: new RegExp(
                 partials.newline + '(#{1,6}' + partials.space + '[^<]*)', 'g'
             ),
             subregex: /(#{1,6})/g,
+
             fn: function(full, newline, content) {
                 var headingLevel;
                 content = content.replace(this.subregex, function(mt) {
@@ -35,6 +37,7 @@ var lighter = {
                 });
                 return newline + util.wrap(this.elClass + headingLevel, content);
             }
+
         }),
 
         bold: new Rule({
@@ -53,7 +56,6 @@ var lighter = {
                 '(?:[^\\*]\\*(?!\\*| |(?:&nbsp;)).+?[^\\*]\\*[^\\*])', 'g'
             ),
             subregex: /[\*_]/g,
-            // lookbehing is missing :(
             fn: function (full) {
                 var length = full.length - 2;
                 return full[0] + Object.getPrototypeOf(this).fn.call(this, full.substr(1, length)) + full.substr(-1);
@@ -70,17 +72,31 @@ var lighter = {
 
         quote: new Rule({
             elClass: 'quote',
-            regex: new RegExp(partials.newline+'(&gt;'+partials.space+'.+)', 'g'),
-            subregex: /&gt;/,
+            regex: new RegExp(partials.newline + '(&gt;' + partials.space + '.+)', 'g'),
+            subregex: /&gt;/g,
             fn: function(full, newline, content) {
                 return newline + Object.getPrototypeOf(this).fn.call(this, content);
             }
         }),
 
-        inlineCode: new Rule({
-            elClass: 'inlineCode',
-            regex: new RegExp('`(?!' + partials.space + ').+?`', 'g'),
-            subregex: /`/g
+        codeInline: new Rule({
+            elClass: 'codeInline',
+            regex: new RegExp('[^`]`(?!`| |(?:&nbsp;)).+?[^`]`[^`]', 'g'),
+            subregex: /`/g,
+            fn: function (full) {
+                var length = full.length - 2;
+                return full[0] + Object.getPrototypeOf(this).fn.call(this, full.substr(1, length)) + full.substr(-1);
+            }
+        }),
+
+        codeBlock: new Rule({
+            elClass: 'codeBlock',
+            regex: new RegExp(partials.newline + '(```[^]+?```.+)', 'g'),
+            subregex: /```/g,
+            fn: function(full, newline, content) {
+                console.log(full);
+                return '<span class="lighter codeBlock">' + full + '</span>';
+            }
         })
     },
 

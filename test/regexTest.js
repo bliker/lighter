@@ -123,11 +123,23 @@ describe('Parsing text and adding marks', function() {
 
     it('for inline code', function() {
         var string = 'Ima text Ima text `String::shift()` stuff';
-        var replaced = lighter.addMark(string, lighter.match.inlineCode);
+        var replaced = lighter.addMark(string, lighter.match.codeInline);
 
         host.innerHTML = replaced;
 
-        expect(host.getElementsByClassName('inlineCode').length).toBe(1);
+        expect(host.getElementsByClassName('codeInline').length).toBe(1);
     });
 
+    it('for code blocks', function() {
+        var string = '<div>```</div>' +
+                     '<div>function() { </div>' +
+                     '<div>console.log()</div>' +
+                     '<div>}</div>' +
+                     '<div>```</div>';
+        var replaced = lighter.addMark(string, lighter.match.codeBlock);
+        host.innerHTML = replaced;
+
+        expect(host.getElementsByClassName('codeBlock').length).toBe(1);
+
+    });
 });

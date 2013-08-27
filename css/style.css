@@ -81,8 +81,12 @@ section:focus {
     font-style: italic;
 }
 
-.lighter.inlineCode {
+.lighter.codeInline,
+.lighter.codeBlock {
     font-family: 'Source Code Pro';
-    background-color: #fafafa;
     font-size: 0.95em;
+}
+
+.lighter.codeInline {
+    background-color: #fafafa;
 }

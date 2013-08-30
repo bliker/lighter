@@ -1,55 +1,45 @@
 describe('Testing markdown block elements', function () {
-    it('headings', function () {
-        parsed = markdown.parse('## hej');
-        expect(parsed[0].type).toBe('h2');
 
-        parsed = markdown.parse('####### hej');
-        expect(parsed[0].type).toBe('h6');
+    // shiming variables like a baos
+    var that = {
+        blocks: [],
+        index: 0
+    };
 
-        parsed = markdown.parse('### hej');
-        expect(parsed[0].type).toBe('h3');
+    var run_parser = function (parser) {
+        // call a parser with shimmed object
+        return markdown.parsers[parser].call(that);
+    }
 
-        // Add not passing for paragraph
+    it('headings', function() {
+        that.blocks[0] = '## Heading';
+        var result = run_parser('atxheading');
+
     });
 
-    it('unordered lists', function () {
-        parsed = markdown.parse('- hej');
-        expect(parsed[0].type).toBe('ul');
+    it('unordered lists', function() {
 
-        parsed = markdown.parse('+ hej');
-        expect(parsed[0].type).toBe('ul');
-
-        // Add not passing for paragraph
-    })
-
-    it('unorderd nested lists', function () {
-        parsed = markdown.parse("- hej\n  - hej");
-        expect(parsed[0].type).toBe('ul');
-        expect(parsed[1].type).toBe('ul');
-
-        parsed = markdown.parse("hej\n  - hej");
-        // talking about not passin
-    })
-
-    it('orderd lists', function () {
-        parsed = markdown.parse('1. hej');
-        expect(parsed[0].type).toBe('ol');
-    })
-
-    it('orderd nested lists', function () {
-        parsed = markdown.parse("1. hej \n  3.hej");
-        expect(parsed[0].type).toBe('ol');
-        expect(parsed[1].type).toBe('ol');
-        console.log(parsed);
-
-        parsed = markdown.parse("hej \n  3.hej");
-    })
-
-    it('quotes', function () {
-        // Simple interpeetation
-        parsed = markdown.parse('> hej');
-        expect(parsed[0].type).toBe('quote');
-    })
+    });
 
 
+    it('ordered lists', function() {
+
+    });
+
+    it('nested lists', function() {
+
+    });
+
+
+    it('quotes', function() {
+
+    });
+
+    it('headings', function() {
+
+    });
+
+    it('headings', function() {
+
+    });
 });

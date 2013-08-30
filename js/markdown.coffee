@@ -12,7 +12,7 @@ window.markdown =
         @blocks = blocks
         @index  = 0
 
-        parsed_blocks = @parseBlocks
+        parsed_blocks = @parseBlocks()
 
     parseBlocks: ->
         console.log('Parsing block:', @blocks[@index]);
@@ -40,9 +40,8 @@ window.markdown =
 
     parsers:
         atxheading: ->
+            console.log(this);
             current = @blocks[@index]
-            console.log(current)
-
             return false if current[0] isnt '#'
 
             i = 1
@@ -50,6 +49,27 @@ window.markdown =
 
             parsed =
                 type: 'h' + i
+                data: [
+                    new MNode(current.substr(0, i), 'mark')
+                    new MNode(current.substr(i), 'content')
+                ]
+
+        ulist: ->
+            current = @blocks[@index]
+
+            # Can be nested so we can ignore whitespace
+            i = 0
+            if @can_be_nested(@blocks[@index-1])
+                i++ while @is_whitespace(current[i])
+
+            valid_char = ['*', '-', '+'].has(current[i])
+            space_after = current[i+1] is " ";
+
+            if not valid_char or not space_after
+                return false
+
+            parsed =
+                type: 'ul'
                 data: [
                     new MNode(current.substr(0, i), 'mark')
                     new MNode(current.substr(i), 'content')

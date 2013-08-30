@@ -58,39 +58,4 @@ var lighter = {
         this._execute(this.removeMarks);
     },
 
-
-    /**
-     * Add marks to content
-     * @param  {string} content Text to parse
-     * @return {string}         Text with applied highlighting
-     */
-    addAllMarks: function(content) {
-
-        for (var match in this.match) {
-            var cur = this.match[match];
-            content = this.addMark(content, cur);
-        }
-
-        return content;
-    },
-
-    /**
-     * Add mark for one type eg. heading, bold
-     * @param  {string} content Do it on this string
-     * @param  {Rule}   match   Rule to use
-     * @return {string}
-     */
-    addMark: function(content, match) {
-        return content.replace(match.regex, match.fn.bind(match));
-    },
-
-    /**
-     * Remove all the marks from text
-     * @param  {string} content Text to polish
-     * @return {string}         Cleaned text
-     */
-    removeMarks: function(content) {
-        return content.replace(/<\/?spa.+?>/g, '');
-    }
-
 };

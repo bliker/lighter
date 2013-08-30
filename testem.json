@@ -1,12 +1,15 @@
 {
     "launch_in_dev": ["Chrome"],
+    "before_tests": "coffee -c js/*.coffee",
     "src_files": [
         "js/vendor/*.js",
-        "js/rule.js",
-        "js/selection.js",
-        "js/util.js",
-        "js/main.js",
+        "js/*.js",
+        "js/*.coffee",
+        "test/*.js"
+    ],
 
-        "test/regexTest.js"
+    "serve_files": [
+      "js/*.js",
+      "test/*.js"
     ]
 }

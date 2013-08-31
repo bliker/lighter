@@ -15,19 +15,23 @@ window.markdown =
         parsed_blocks = @parseBlocks()
 
     parseBlocks: ->
-        console.log('Parsing block:', @blocks[@index]);
+        current_block = @blocks[@index];
+        console.log('Parsing block:', current_block);
         block_parsed = false
         for k, parser of @parsers
             parsed = parser.apply(this)
 
             # Save parsed block to array and leave the parsing loop
             if parsed
-                @blocks[@index] = parsed
+                current_block = parsed
                 block_parsed = true
                 break
 
-        ## Not parsed by regular
-        # unless block_parsed
+        ## Not parsed by regular stuff, must be paragrpah
+        if not block_parsed
+            current_block =
+                type: 'para'
+                data: [new MNode(current_block, 'content')]
 
         # Index
         @index++
@@ -40,7 +44,6 @@ window.markdown =
 
     parsers:
         atxheading: ->
-            console.log(this);
             current = @blocks[@index]
             return false if current[0] isnt '#'
 
@@ -74,6 +77,55 @@ window.markdown =
                     new MNode(current.substr(0, i), 'mark')
                     new MNode(current.substr(i), 'content')
                 ]
+
+
+        olist: ->
+            current = @blocks[@index]
+
+            i = 0
+            if @can_be_nested(@blocks[@index-1])
+                i++ while @is_whitespace(current[i])
+
+            i++ while Number(current[i])
+
+            numeric = i > 0
+            with_dot_after = current[i] is '.'
+
+            return false if not numeric or not with_dot_after
+
+            parsed =
+                type: 'ol'
+                data: [
+                    new MNode(current.substr(0, i+1), 'mark')
+                    new MNode(current.substr(i+1), 'content')
+                ]
+
+        quote: ->
+            current = @blocks[@index]
+
+            return false if (current[0] isnt '>') or (current[1] isnt " ")
+            parse =
+                type: 'quote'
+                data: [
+                    new MNode(current[0], 'mark')
+                    new MNode(current.substr(1), 'content')
+                ]
+
+        empty: ->
+            current = @blocks[@index]
+
+            i = 0
+            i++ while current[i] and @is_whitespace(current[i])
+
+            # There is less whitepace than acutal characters
+            return false if (i-1) isnt current.length
+
+            parsed =
+                type: 'empty'
+                data: new MNode(current, 'content')
+
+        codeblock: (blocks, index) ->
+            return false
 
 
     # has ul or ol before?

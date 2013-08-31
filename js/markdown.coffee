@@ -1,6 +1,3 @@
-Array::has = (key) ->
-  @indexOf(key) > -1
-
 window.markdown =
 
     parse: (text) ->
@@ -12,9 +9,11 @@ window.markdown =
         @blocks = blocks
         @index  = 0
 
-        parsed_blocks = @parseBlocks()
+        json_blocks = @createJson()
+        html_blocks = @createHtml()
 
-    parseBlocks: ->
+    # Create Json form markdown text
+    createJson: ->
         current_block = @blocks[@index];
         console.log('Parsing block:', current_block);
         block_parsed = false
@@ -42,6 +41,8 @@ window.markdown =
             # All blocks are parsed
             return @blocks
 
+    createHtml: ->
+
     parsers:
         atxheading: ->
             current = @blocks[@index]
@@ -65,7 +66,7 @@ window.markdown =
             if @can_be_nested(@blocks[@index-1])
                 i++ while @is_whitespace(current[i])
 
-            valid_char = ['*', '-', '+'].has(current[i])
+            valid_char = ['*', '-', '+'].indexOf(current[i]) > -1
             space_after = current[i+1] is " ";
 
             if not valid_char or not space_after
@@ -124,18 +125,18 @@ window.markdown =
                 type: 'empty'
                 data: new MNode(current, 'content')
 
-        codeblock: (blocks, index) ->
+        codeblock: ->
             return false
 
 
     # has ul or ol before?
     can_be_nested: (prev) ->
         return false unless prev
-        prev and ['ol', 'ul'].has(prev.type)
+        prev and ['ol', 'ul'].indexOf(prev.type) > -1
 
     # check is character is indeed a whitespace
     is_whitespace: (char) ->
-        [" ", "\t"].has(char)
+        [" ", "\t"].indexOf(char) > -1
 
     is_empty: (block) ->
 

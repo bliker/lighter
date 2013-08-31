@@ -117,7 +117,7 @@ window.markdown =
             i = 0
             i++ while current[i] and @is_whitespace(current[i])
 
-            # There is less whitepace than acutal characters
+            # There is less whitespace than acutal characters
             return false if (i-1) isnt current.length
 
             parsed =
@@ -130,6 +130,7 @@ window.markdown =
 
     # has ul or ol before?
     can_be_nested: (prev) ->
+        return false unless prev
         prev and ['ol', 'ul'].has(prev.type)
 
     # check is character is indeed a whitespace

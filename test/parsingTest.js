@@ -7,7 +7,7 @@
       index: 0
     };
     shim.can_be_nested = markdown.can_be_nested;
-    shim.can_be_nested = markdown.is_whitespace;
+    shim.is_whitespace = markdown.is_whitespace;
     run_parser = function(parser) {
       return markdown.parsers[parser].call(shim);
     };
@@ -40,14 +40,34 @@
     });
     it('nested lists', function() {
       var result;
-      shim.blocks[0] = '1. hej';
+      shim.can_be_nested = function() {
+        return true;
+      };
       shim.blocks[0] = '  2. hej';
       result = run_parser('olist');
-      return expect(result.type).toBe('ol');
+      expect(result.type).toBe('ol');
+      shim.blocks[0] = '  - hej';
+      result = run_parser('ulist');
+      expect(result.type).toBe('ul');
+      shim.can_be_nested = function() {
+        return false;
+      };
+      shim.blocks[0] = '  2. hej';
+      result = run_parser('olist');
+      expect(result).toBe(false);
+      shim.blocks[0] = '  - hej';
+      result = run_parser('ulist');
+      return expect(result).toBe(false);
     });
-    it('quotes', function() {});
-    it('headings', function() {});
-    return it('headings', function() {});
+    return it('quotes', function() {
+      var result;
+      shim.blocks[0] = '> bananas';
+      result = run_parser('quote');
+      expect(result.type).toBe('quote');
+      shim.blocks[0] = '>bananas';
+      result = run_parser('quote');
+      return expect(result).toBe(false);
+    });
   });
 
 }).call(this);

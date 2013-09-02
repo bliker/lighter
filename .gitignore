@@ -1,2 +1,3 @@
 js/markdown.js
 test/*.js
+*.map

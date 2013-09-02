@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<style>
+
+    html, body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .input, .output {
+        float: left;
+        width: 48%;
+        padding: 1%;
+        height: 98%;
+    }
+</style>
+<body>
+    <div class="input" contentEditable>dss</div>
+    <div class="output"></div>
+    <script src="js/markdown.js"></script>
+    <script>
+        var md = document.getElementsByClassName('input')[0]
+        var parsed = document.getElementsByClassName('output')[0]
+
+        md.addEventListener('keyup', function () {
+            parsed.innerHTML = markdown.parse(md.innerText);
+        })
+    </script>
+</body>
+</html>

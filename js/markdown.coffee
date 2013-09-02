@@ -161,7 +161,7 @@ window.markdown =
                     data: [new MNode(@blocks[@index], 'content')]
                 @index++
 
-            # Last block has to be returned istead of assgined
+            # Last block has to be returned instead of assgined
             parsed =
                 type: 'codeblockg'
                 data: [new MNode(@blocks[@index], 'mark')]

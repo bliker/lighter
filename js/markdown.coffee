@@ -12,6 +12,8 @@ window.markdown =
         json_blocks = @createJson()
         html_blocks = @createHtml()
 
+        return html_blocks
+
     # Create Json form markdown text
     createJson: ->
         current_block = @blocks[@index];
@@ -22,28 +24,32 @@ window.markdown =
 
             # Save parsed block to array and leave the parsing loop
             if parsed
-                current_block = parsed
+                @blocks[@index] = parsed
                 block_parsed = true
                 break
 
         ## Not parsed by regular stuff, must be paragrpah
         if not block_parsed
-            current_block =
-                type: 'para'
-                data: [new MNode(current_block, 'content')]
+            @blocks[@index] = new LParagraph({content: current_block})
 
         # Index
         @index++
         if @blocks.length > @index
             # recrusive call for parsing
-            @parseBlocks
+            @createJson()
         else
             # All blocks are parsed
             return @blocks
 
     createHtml: ->
+        newtext = ''
+        for block in @blocks
+            newtext += block.toHtml() + '</br>'
+
+        return newtext
 
     parsers:
+
         atxheading: ->
             current = @blocks[@index]
             return false if current[0] isnt '#'
@@ -51,12 +57,11 @@ window.markdown =
             i = 1
             i++ while current[i] is '#' and i < 6
 
-            parsed =
-                type: 'h' + i
-                data: [
-                    new MNode(current.substr(0, i), 'mark')
-                    new MNode(current.substr(i), 'content')
-                ]
+            # mark + content
+            new LAtxHeading({
+                mark: current.substr(0, i),
+                content: current.substr(i)
+            }, i)
 
         ulist: ->
             current = @blocks[@index]
@@ -72,13 +77,10 @@ window.markdown =
             if not valid_char or not space_after
                 return false
 
-            parsed =
-                type: 'ul'
-                data: [
-                    new MNode(current.substr(0, i), 'mark')
-                    new MNode(current.substr(i), 'content')
-                ]
-
+            new LUnorderedList({
+                mark: current.substr(0, i)
+                content: current.substr(i)
+            });
 
         olist: ->
             current = @blocks[@index]
@@ -95,36 +97,27 @@ window.markdown =
 
             return false if not numeric or not with_dot_after
 
-            parsed =
-                type: 'ol'
-                data: [
-                    new MNode(current.substr(0, i+1), 'mark')
-                    new MNode(current.substr(i+1), 'content')
-                ]
+            new LOrderedList({
+                mark: current.substr(0, i+1)
+                content: current.substr(i+1)
+            })
 
         quote: ->
             current = @blocks[@index]
 
             return false if (current[0] isnt '>') or (current[1] isnt " ")
-            parse =
-                type: 'quote'
-                data: [
-                    new MNode(current[0], 'mark')
-                    new MNode(current.substr(1), 'content')
-                ]
+
+            new LQuote({
+                mark: current[0]
+                content: current.substr(1)
+            })
 
         empty: ->
             current = @blocks[@index]
 
-            i = 0
-            i++ while current[i] and @is_whitespace(current[i])
+            return false if current.trim().length
 
-            # There is less whitespace than acutal characters
-            return false if (i-1) isnt current.length
-
-            parsed =
-                type: 'empty'
-                data: [new MNode(current, 'content')]
+            new LEmpty({content: current})
 
         # The indented codeblock
         codeblock: ->
@@ -140,31 +133,22 @@ window.markdown =
             i++ while current[i] is ' '
             return false if i < 4 and current[0] isnt '\t'
 
-            parsed =
-                type: 'codeblock'
-                data: [new MNode(current, 'content')]
+            new LCodeblock({content: current})
 
         codeblockg: ->
             current = @blocks[@index]
 
             return false if not open_backticks = @is_codeblock_seq(current)
-
-            @blocks[@index] =
-                type: 'codeblockg'
-                data: [new MNode(current, 'mark')]
+            @blocks[@index] = new LGithubCodeblock({mark: current})
 
             # Non sandard block skipping in here
             @index++
             while @blocks[@index] and not close_backticks = @is_codeblock_seq(@blocks[@index])
-                @blocks[@index] =
-                    type: 'codeblockg'
-                    data: [new MNode(@blocks[@index], 'content')]
+                @blocks[@index] =  new LGithubCodeblock({content: @blocks[@index]})
                 @index++
 
             # Last block has to be returned instead of assgined
-            parsed =
-                type: 'codeblockg'
-                data: [new MNode(@blocks[@index], 'mark')]
+            new LGithubCodeblock({mark: @blocks[@index]});
 
 
 
@@ -175,7 +159,11 @@ window.markdown =
 
     # check is character is indeed a whitespace
     is_whitespace: (char) ->
-        [" ", "\t"].indexOf(char) > -1
+        [
+            '\u0020' # space
+            '\u00A0' # non breaking space
+            '\u0009' # tab
+        ].indexOf(char) > -1
 
     is_type: (block, type) ->
         return false unless block
@@ -192,7 +180,53 @@ window.markdown =
         i > 2 and i is block.length
 
 
-class MNode
-    constructor: (content, type) ->
-        @content = content
-        @type = type
+class LNode
+    constructor: (data, type) ->
+        @themark = data.mark
+        @content = data.content
+
+        @type = type # like headings
+
+    wrap: (content, htmlclass) ->
+        htmlclass = @htmlclass unless htmlclass
+        '<span class="lighter_'+htmlclass+'">'+content+'</span>'
+
+    mark: -> @wrap(@themark, 'mark')
+
+###### Element classes
+
+class LAtxHeading extends LNode
+    toHtml: -> @wrap(@mark() + @content, 'h' + @type)
+
+class LUnorderedList extends LNode
+    htmlclass: 'ul'
+    toHtml: -> @wrap(@mark() + @content)
+
+class LOrderedList extends LUnorderedList
+    htmlclass: 'ol'
+
+class LQuote extends LUnorderedList
+    htmlclass: 'quote'
+
+###### Code
+
+class LCodeblock extends LNode
+    htmlclass: 'code'
+    toHtml: -> @wrap(@content)
+
+class LGithubCodeblock extends LNode
+    htmlclass: 'code'
+    toHtml: ->
+        if @themark
+            return @mark()
+        else
+            return @wrap(@content)
+
+###### Empty
+
+class LEmpty extends LNode
+    toHtml: -> @content
+
+class LParagraph extends LEmpty
+
+

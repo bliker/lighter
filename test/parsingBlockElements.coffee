@@ -1,82 +1,71 @@
 describe 'Testing markdown block elements', ->
 
-    # shiming variables like a baos
-    shim = blocks: [], index: 0
-    shim.can_be_nested = markdown.can_be_nested
-    shim.is_whitespace = markdown.is_whitespace
-    shim.is_codeblock_seq = markdown.is_codeblock_seq
-    shim.is_type = markdown.is_type
 
-    run_parser = (parser) ->
-        # call a parser with shimmed object
-        markdown.parsers[parser].call shim
+    mock = blocks: [], index: 0
+    # call a parser with shimmed object
+    run = (parser) ->
+        markdown.parsers[parser].call mock
 
-    it 'headings', ->
-        shim.blocks[0] = '## Heading'
-        result = run_parser('atxheading')
-        expect(result.type).toBe('h2')
+    describe 'AtxHeadings', ->
 
-        shim.blocks[0] = '# Heading'
-        result = run_parser('atxheading')
-        expect(result.type).toBe('h1')
+        it 'Simple', ->
+            mock.blocks[0] = '# Hello'
+            result = run('atxheading')
+            expect(result instanceof LAtxHeading).toBeTruthy()
+            expect(result.type).toBe(1)
 
-        shim.blocks[0] = '####### Heading'
-        result = run_parser('atxheading')
-        expect(result.type).toBe('h6')
+        it 'Long', ->
+            mock.blocks[0] = '###### Hello'
+            result = run('atxheading')
+            expect(result instanceof LAtxHeading).toBeTruthy()
+            expect(result.type).toBe(6)
 
-    it 'unordered lists', ->
-        shim.blocks[0] = '- Hello'
-        result = run_parser('ulist')
-        expect(result.type).toBe('ul')
+            mock.blocks[0] = '####### Hello'
+            result = run('atxheading')
+            expect(result instanceof LAtxHeading).toBeTruthy()
+            expect(result.type).toBe(6)
 
-        shim.blocks[0] = '* Hello'
-        result = run_parser('ulist')
-        expect(result.type).toBe('ul')
+        it 'Without space', ->
+            mock.blocks[0] = '###Hello'
+            result = run('atxheading')
+            expect(result instanceof LAtxHeading).toBeTruthy()
+            expect(result.type).toBe(3)
 
-    it 'ordered lists', ->
-        shim.blocks[0] = '1. Hello'
-        result = run_parser('olist')
-        expect(result.type).toBe('ol')
+        it 'With indentation', ->
+            mock.blocks[0] = ' ### Hello'
+            result = run('atxheading')
+            expect(result instanceof LAtxHeading).toBeFalsy()
 
-    it 'nested lists', ->
-        # Do not really want to fake all the parsing for no reason
-        shim.can_be_nested = -> true
-        shim.blocks[0] = '  2. hej'
-        result = run_parser('olist')
-        expect(result.type).toBe('ol')
+    describe 'Unordered list', ->
 
-        shim.blocks[0] = '  - hej'
-        result = run_parser('ulist')
-        expect(result.type).toBe('ul')
+        it 'various characters', ->
+            mock.can_be_nested = -> false
 
-        shim.can_be_nested = -> false
-        shim.blocks[0] = '  2. hej'
-        result = run_parser('olist')
-        expect(result).toBe(false)
+            mock.blocks[0] = '- Hello'
+            result = run('ulist')
+            expect(result instanceof LUnorderedList).toBeTruthy()
 
-        shim.blocks[0] = '  - hej'
-        result = run_parser('ulist')
-        expect(result).toBe(false)
+            mock.blocks[0] = '* Hello'
+            result = run('ulist')
+            expect(result instanceof LUnorderedList).toBeTruthy()
 
-    it 'quotes', ->
-        shim.blocks[0] = '> bananas'
-        result = run_parser('quote')
-        expect(result.type).toBe('quote')
+            mock.blocks[0] = '+ Hello'
+            result = run('ulist')
+            expect(result instanceof LUnorderedList).toBeTruthy()
 
-        shim.blocks[0] = '>bananas'
-        result = run_parser('quote')
-        expect(result).toBe(false)
+        it 'without space', ->
+            mock.blocks[0] = '+Hello'
+            result = run('ulist')
+            expect(result instanceof LUnorderedList).toBeFalsy()
 
-    it 'codeblock', ->
-        shim.is_type = -> true
-        shim.blocks[0] = '    bananas'
-        result = run_parser('codeblock')
-        expect(result.type).toBe('codeblock')
+    describe 'Empty', ->
 
-    it 'codeblockg', ->
-        shim.blocks[0] = '```'
-        shim.blocks[1] = 'code Stuff'
-        shim.blocks[2] = '```'
+        it 'with space', ->
+            mock.blocks[0] = ' '
+            result = run('empty')
+            expect(result instanceof LEmpty).toBeTruthy()
 
-        result = run_parser('codeblockg')
-        expect(result.type).toBe('codeblockg')
+        it 'with some character', ->
+            mock.blocks[0] = 's'
+            result = run('empty')
+            expect(result instanceof LEmpty).toBeFalsy()

@@ -87,6 +87,7 @@ window.markdown =
             if @can_be_nested(@blocks[@index-1])
                 i++ while @is_whitespace(current[i])
 
+            # Not bug, using the same i to count refrecence for mark
             i++ while Number(current[i])
 
             numeric = i > 0
@@ -123,10 +124,49 @@ window.markdown =
 
             parsed =
                 type: 'empty'
-                data: new MNode(current, 'content')
+                data: [new MNode(current, 'content')]
 
+        # The indented codeblock
         codeblock: ->
-            return false
+            current = @blocks[@index]
+            prev = @blocks[@index-1]
+
+            # There must be a empty line before or code
+            not_empty = not @is_type(prev, 'empty')
+            not_codeblock = not @is_type(prev, 'codeblock')
+            return false if not_empty or not_codeblock
+
+            i = 0
+            i++ while current[i] is ' '
+            return false if i < 4 and current[0] isnt '\t'
+
+            parsed =
+                type: 'codeblock'
+                data: [new MNode(current, 'content')]
+
+        codeblockg: ->
+            current = @blocks[@index]
+
+            # Backtics have to be lonely
+            return false if not open_backticks = @is_codeblock_seq(current)
+
+            @blocks[@index] =
+                type: 'codeblockg'
+                data: [new MNode(current, 'mark')]
+
+            # Non sandard block skipping in here
+            @index++
+            while @blocks[@index] and not close_backticks = @is_codeblock_seq(@blocks[@index])
+                @blocks[@index] =
+                    type: 'codeblockg'
+                    data: [new MNode(@blocks[@index], 'content')]
+                @index++
+
+            # Last block has to be returned istead of assgined
+            parsed =
+                type: 'codeblockg'
+                data: [new MNode(@blocks[@index], 'mark')]
+
 
 
     # has ul or ol before?
@@ -138,8 +178,17 @@ window.markdown =
     is_whitespace: (char) ->
         [" ", "\t"].indexOf(char) > -1
 
-    is_empty: (block) ->
+    is_type: (block, type) ->
+        return false unless block
+        block.type is type
 
+    # Shitty old nap wizzing thru the air
+    is_codeblock_seq: (block) ->
+        return false unless block
+        i = 0;
+        i++ while block[i] is '`'
+
+        i < 3 or i isnt block.length
 
 
 class MNode

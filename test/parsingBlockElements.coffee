@@ -74,3 +74,9 @@ describe 'Testing markdown block elements', ->
         expect(result.type).toBe('codeblock')
 
     it 'codeblockg', ->
+        shim.blocks[0] = '```'
+        shim.blocks[1] = 'code Stuff'
+        shim.blocks[2] = '```'
+
+        result = run_parser('codeblockg')
+        expect(result.type).toBe('codeblockg')

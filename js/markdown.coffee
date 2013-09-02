@@ -147,7 +147,6 @@ window.markdown =
         codeblockg: ->
             current = @blocks[@index]
 
-            # Backtics have to be lonely
             return false if not open_backticks = @is_codeblock_seq(current)
 
             @blocks[@index] =
@@ -188,7 +187,9 @@ window.markdown =
         i = 0;
         i++ while block[i] is '`'
 
-        i < 3 or i isnt block.length
+
+        # Backtics have to be lonely
+        i > 2 and i is block.length
 
 
 class MNode

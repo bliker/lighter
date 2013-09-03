@@ -61,7 +61,33 @@ window.markdown =
             new LAtxHeading({
                 mark: current.substr(0, i),
                 content: current.substr(i)
-            }, i)
+                type: i
+            })
+
+        setextheading: ->
+            current = @blocks[@index]
+            next = @blocks[@index+1]
+
+            char = ['=', '-'].indexOf(next[0]);
+            # Ignore this right away
+            return false if not next or char < 0
+
+            i = 1
+            # Check if first character is there until the end of line
+            i++ while next[i] is next[0]
+            return false if i isnt next.trim().length
+
+            @blocks[@index] = new LSetextHeading({
+                content: current,
+                type: char + 1
+            })
+
+            # Blockskipping
+            @index++
+            new LSetextHeading({
+                mark: next
+                type: char + 1
+            })
 
         ulist: ->
             current = @blocks[@index]
@@ -106,6 +132,7 @@ window.markdown =
             current = @blocks[@index]
 
             return false if (current[0] isnt '>') or (current[1] isnt " ")
+            # Nested quotes not supported yet!
 
             new LQuote({
                 mark: current[0]
@@ -181,26 +208,34 @@ window.markdown =
 
 
 class LNode
-    constructor: (data, type) ->
-        @themark = data.mark
-        @content = data.content
-
-        @type = type # like headings
+    constructor: (data) ->
+        @_mark = data.mark
+        @_content = data.content
+        @_type = data.type
 
     wrap: (content, htmlclass) ->
         htmlclass = @htmlclass unless htmlclass
         '<span class="lighter_'+htmlclass+'">'+content+'</span>'
 
-    mark: -> @wrap(@themark, 'mark')
+    mark: -> @wrap(@_mark, 'mark')
+    content: -> @_content
+    type: -> @_type
 
 ###### Element classes
 
 class LAtxHeading extends LNode
-    toHtml: -> @wrap(@mark() + @content, 'h' + @type)
+    toHtml: -> @wrap(@mark() + @content(), 'h' + @type())
+
+class LSetextHeading extends LNode
+    toHtml: ->
+        if @_mark
+            @wrap(@mark(), 'sh' + @type())
+        else
+            @wrap(@content(), 'sh' + @type())
 
 class LUnorderedList extends LNode
     htmlclass: 'ul'
-    toHtml: -> @wrap(@mark() + @content)
+    toHtml: -> @wrap(@mark() + @content())
 
 class LOrderedList extends LUnorderedList
     htmlclass: 'ol'
@@ -212,20 +247,20 @@ class LQuote extends LUnorderedList
 
 class LCodeblock extends LNode
     htmlclass: 'code'
-    toHtml: -> @wrap(@content)
+    toHtml: -> @wrap(@content())
 
 class LGithubCodeblock extends LNode
     htmlclass: 'code'
     toHtml: ->
-        if @themark
+        if @_mark
             return @mark()
         else
-            return @wrap(@content)
+            return @wrap(@content())
 
 ###### Empty
 
 class LEmpty extends LNode
-    toHtml: -> @content
+    toHtml: -> @content()
 
 class LParagraph extends LEmpty
 

@@ -6,35 +6,47 @@ describe 'Testing markdown block elements', ->
     run = (parser) ->
         markdown.parsers[parser].call mock
 
+    beforeEach ->
+        mock.blocks = []
+        mock.index = 0
+
     describe 'AtxHeadings', ->
 
-        it 'Simple', ->
+        it 'simple', ->
             mock.blocks[0] = '# Hello'
             result = run('atxheading')
             expect(result instanceof LAtxHeading).toBeTruthy()
-            expect(result.type).toBe(1)
+            expect(result.type()).toBe(1)
 
-        it 'Long', ->
+        it 'long', ->
             mock.blocks[0] = '###### Hello'
             result = run('atxheading')
             expect(result instanceof LAtxHeading).toBeTruthy()
-            expect(result.type).toBe(6)
+            expect(result.type()).toBe(6)
 
             mock.blocks[0] = '####### Hello'
             result = run('atxheading')
             expect(result instanceof LAtxHeading).toBeTruthy()
-            expect(result.type).toBe(6)
+            expect(result.type()).toBe(6)
 
-        it 'Without space', ->
+        it 'without space', ->
             mock.blocks[0] = '###Hello'
             result = run('atxheading')
             expect(result instanceof LAtxHeading).toBeTruthy()
-            expect(result.type).toBe(3)
+            expect(result.type()).toBe(3)
 
-        it 'With indentation', ->
+        it 'with indentation', ->
             mock.blocks[0] = ' ### Hello'
             result = run('atxheading')
             expect(result instanceof LAtxHeading).toBeFalsy()
+
+    describe 'Setext Headings', ->
+
+        it 'simple h1', ->
+            mock.blocks[0] = 'Hello'
+            mock.blocks[1] = '======'
+            result = run('setextheading')
+            expect(result instanceof LSetextHeading).toBeTruthy()
 
     describe 'Unordered list', ->
 
@@ -57,6 +69,30 @@ describe 'Testing markdown block elements', ->
             mock.blocks[0] = '+Hello'
             result = run('ulist')
             expect(result instanceof LUnorderedList).toBeFalsy()
+
+    describe 'Ordered Lists', ->
+
+        it 'with number', ->
+            mock.blocks[0] = '1. Hello'
+            result = run('olist')
+            expect(result instanceof LOrderedList).toBeTruthy()
+
+        it 'without dot', ->
+            mock.blocks[0] = '1 Hello'
+            result = run('olist')
+            expect(result instanceof LOrderedList).toBeFalsy()
+
+    describe 'Quote', ->
+
+        it 'as usual', ->
+            mock.blocks[0] = '> Hello'
+            result = run('quote')
+            expect(result instanceof LQuote).toBeTruthy()
+
+        it 'as usual', ->
+            mock.blocks[0] = '>Hello'
+            result = run('quote')
+            expect(result instanceof LQuote).toBeFalsy()
 
     describe 'Empty', ->
 

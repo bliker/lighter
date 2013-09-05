@@ -1,10 +1,9 @@
 # Keeping this private
-lighter_markdown_parser =
+lighter_block_parser =
 
-    parse: (text) ->
-
-        if not text or text.trim().length is 0
-            return new LEmpty(content: text)
+    # Called on text
+    parse_blocks: (text) ->
+        return new LEmpty(content: text) if not text or text.trim().length is 0
 
         blocks = text.split('\n')
         # tracks where in parsed file are we
@@ -14,10 +13,8 @@ lighter_markdown_parser =
 
         @loop()
 
-    loop: ->
-
+    loop_blocks: ->
         @parse_block()
-
         @index++
         # recrusiveluy call for parser
         # If we are on the end return the parsed stuff
@@ -164,8 +161,6 @@ lighter_markdown_parser =
             # Last block has to be returned instead of assgined
             new LGithubCodeblock(mark: @blocks[@index])
 
-
-
     ############
     # Helper methods in object root for convinience
     ##########
@@ -197,6 +192,7 @@ lighter_markdown_parser =
         # Backtics have to be lonely
         i > 2 and i is block.length
 
+
 ############
 # Base class
 ############
@@ -205,8 +201,10 @@ class LNode
 
     constructor: (data) ->
         @_mark = data.mark
-        @_content = data.content
         @_type = data.type
+
+        if data.spanble
+
 
     wrap: (content, htmlclass) ->
         htmlclass = @htmlclass unless htmlclass
@@ -268,10 +266,10 @@ class LParagraph extends LEmpty
 ############
 window.markdown =
 
-    toJson: (text) -> lighter_markdown_parser.parse(text)
+    toJson: (text) -> lighter_block_parser.parse_blocks(text)
     toHtml: (text) ->
         html = ''
-        parsed_json = lighter_markdown_parser.parse(text)
+        parsed_json = lighter_block_parser.parse_blocks(text)
         for block in parsed_json
             html += block.toHtml() + '</br>'
         html

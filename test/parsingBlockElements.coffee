@@ -63,6 +63,13 @@ describe 'Testing markdown block elements', ->
             expect(result instanceof LSetextHeading).toBeTruthy()
             expect(result.type()).toBe(2);
 
+        it 'without next line', ->
+            mock.blocks[0] = 'Hello'
+            result = run('setextheading')
+            expect(result instanceof LSetextHeading).toBeFalsy()
+
+
+
     describe 'Unordered list', ->
 
         it 'various characters', ->

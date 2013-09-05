@@ -1,39 +1,50 @@
 # Keeping this private
 lighter_markdown_parser =
 
-    parse: (string) ->
-        blocks = text.split('\n')
-        return text if blocks.length == 0
+    parse: (text) ->
 
+        if not text or text.trim().length is 0
+            return new LEmpty(content: text)
+
+        blocks = text.split('\n')
         # tracks where in parsed file are we
         # No point of passing it around
         @blocks = blocks
         @index  = 0
 
-        @doparsing()
+        @loop()
 
-    doparsing: ->
+    loop: ->
+
+        @parse_one()
+
+        @index++
+        # recrusiveluy call for parser
+        # If we are on the end return the parsed stuff
+        if @blocks.length > @index then @loop() else @blocks
+
+    parse_one: ->
         current = @blocks[@index];
-        console.log('Parsing block:', current);
         block_parsed = false
 
-        for k, parser of @parsers
+        if current.trim().length is 0
+            @blocks[@index] = new LEmpty({content: current})
+            return
+
+        for k, parser of @block
             parsed = parser.apply(this)
 
             # Save parsed block to array and leave the parsing loop
             if parsed
                 @blocks[@index] = parsed
                 block_parsed = true
+                console.log('Parsed block', current);
                 break
 
         # Not parsed by regular stuff, must be paragrpah
         if not block_parsed
             @blocks[@index] = new LParagraph({content: current})
 
-        @index++
-        # recrusiveluy call for parser
-        # If we are on the end return the parsed stuff
-        if @blocks.length > @index then @doparsing() else @blocks
 
     # Block level parsers
     block:
@@ -52,11 +63,12 @@ lighter_markdown_parser =
 
         setextheading: ->
             current = @blocks[@index]
+
             next = @blocks[@index+1]
+            return false if not next
 
             char = ['=', '-'].indexOf(next[0]);
-            # Ignore this right away
-            return false if not next or char < 0
+            return false if not char < 0
 
             i = 1
             # Check if first character is there until the end of line
@@ -192,15 +204,80 @@ lighter_markdown_parser =
         i > 2 and i is block.length
 
 ############
+# Base class
+############
+
+class LNode
+
+    constructor: (data) ->
+        @_mark = data.mark
+        @_content = data.content
+        @_type = data.type
+
+    wrap: (content, htmlclass) ->
+        htmlclass = @htmlclass unless htmlclass
+        '<span class="lighter_'+htmlclass+'">'+content+'</span>'
+
+    mark: -> @wrap(@_mark, 'mark')
+
+    content: -> @_content
+
+    type: -> @_type
+
+############
+# Block level classes
+############
+
+class LAtxHeading extends LNode
+    toHtml: -> @wrap(@mark() + @content(), 'h' + @type())
+
+class LSetextHeading extends LNode
+    toHtml: ->
+        if @_mark
+            @wrap(@mark(), 'sh' + @type())
+        else
+            @wrap(@content(), 'sh' + @type())
+
+class LUnorderedList extends LNode
+    htmlclass: 'ul'
+    toHtml: -> @wrap(@mark() + @content())
+
+class LOrderedList extends LUnorderedList
+    htmlclass: 'ol'
+
+class LQuote extends LUnorderedList
+    htmlclass: 'quote'
+
+############
+# Code Blocks
+############
+
+class LCodeblock extends LNode
+    htmlclass: 'code'
+    toHtml: -> @wrap(@content())
+
+class LGithubCodeblock extends LNode
+    htmlclass: 'code'
+    toHtml: -> if @_mark then @mark() else @wrap(@content())
+
+############
+# Special Block level
+############
+
+class LEmpty extends LNode
+    toHtml: -> if @content() then @content() else ''
+
+class LParagraph extends LEmpty
+
+############
 # Public API
 ############
 window.markdown =
 
-    toJson: (text) -> lighter_markdown_parser.parse()
-    toHtml: ->
+    toJson: (text) -> lighter_markdown_parser.parse(text)
+    toHtml: (text) ->
         html = ''
-        parsed_json = lighter_markdown_parser.parse()
-        for i in array
-            html += parsed_json[i].toHtml()
-
+        parsed_json = lighter_markdown_parser.parse(text)
+        for block in parsed_json
+            html += block.toHtml() + '</br>'
         html

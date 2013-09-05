@@ -28,7 +28,7 @@
         var parsed = document.getElementsByClassName('output')[0]
 
         md.addEventListener('keyup', function () {
-            parsed.innerHTML = markdown.parse(md.innerText);
+            parsed.innerHTML = markdown.toHtml(md.innerText);
         })
     </script>
 </body>

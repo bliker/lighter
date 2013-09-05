@@ -47,6 +47,21 @@ describe 'Testing markdown block elements', ->
             mock.blocks[1] = '======'
             result = run('setextheading')
             expect(result instanceof LSetextHeading).toBeTruthy()
+            expect(result.type()).toBe(1);
+
+        it 'simple h2', ->
+            mock.blocks[0] = 'Hello'
+            mock.blocks[1] = '-----'
+            result = run('setextheading')
+            expect(result instanceof LSetextHeading).toBeTruthy()
+            expect(result.type()).toBe(2);
+
+        it 'with space after', ->
+            mock.blocks[0] = 'Hello'
+            mock.blocks[1] = '-----   '
+            result = run('setextheading')
+            expect(result instanceof LSetextHeading).toBeTruthy()
+            expect(result.type()).toBe(2);
 
     describe 'Unordered list', ->
 
@@ -89,7 +104,7 @@ describe 'Testing markdown block elements', ->
             result = run('quote')
             expect(result instanceof LQuote).toBeTruthy()
 
-        it 'as usual', ->
+        it 'without space', ->
             mock.blocks[0] = '>Hello'
             result = run('quote')
             expect(result instanceof LQuote).toBeFalsy()

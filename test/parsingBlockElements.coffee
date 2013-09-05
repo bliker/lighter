@@ -1,10 +1,9 @@
 describe 'Testing markdown block elements', ->
 
-
     mock = blocks: [], index: 0
     # call a parser with shimmed object
     run = (parser) ->
-        lighter_block_parser.block[parser].call mock
+        MarkdownBlockParser.prototype.parsers[parser].call mock
 
     beforeEach ->
         mock.blocks = []
@@ -115,15 +114,3 @@ describe 'Testing markdown block elements', ->
             mock.blocks[0] = '>Hello'
             result = run('quote')
             expect(result instanceof LQuote).toBeFalsy()
-
-    describe 'Empty', ->
-
-        it 'with space', ->
-            mock.blocks[0] = ' '
-            result = run('empty')
-            expect(result instanceof LEmpty).toBeTruthy()
-
-        it 'with some character', ->
-            mock.blocks[0] = 's'
-            result = run('empty')
-            expect(result instanceof LEmpty).toBeFalsy()

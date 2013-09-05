@@ -1,8 +1,7 @@
 # Keeping this private
-lighter_block_parser =
+class MarkdownBlockParser
 
-    # Called on text
-    parse_blocks: (text) ->
+    constructor: (text) ->
         return new LEmpty(content: text) if not text or text.trim().length is 0
 
         blocks = text.split('\n')
@@ -11,16 +10,16 @@ lighter_block_parser =
         @blocks = blocks
         @index  = 0
 
-        @loop()
+        return @loop()
 
-    loop_blocks: ->
-        @parse_block()
+    loop: ->
+        @parse()
         @index++
         # recrusiveluy call for parser
         # If we are on the end return the parsed stuff
         if @blocks.length > @index then @loop() else @blocks
 
-    parse_block: ->
+    parse: ->
         current = @blocks[@index];
         block_parsed = false
 
@@ -28,7 +27,7 @@ lighter_block_parser =
             @blocks[@index] = new LEmpty({content: current})
             return
 
-        for k, parser of @block
+        for k, parser of @parsers
             parsed = parser.apply(this)
 
             # Save parsed block to array and leave the parsing loop
@@ -44,7 +43,7 @@ lighter_block_parser =
 
 
     # Block level parsers
-    block:
+    parsers:
         atxheading: ->
             current = @blocks[@index]
             return false if current[0] isnt '#'
@@ -202,8 +201,8 @@ class LNode
     constructor: (data) ->
         @_mark = data.mark
         @_type = data.type
-
-        if data.spanble
+        @_content = data.content
+        # if data.spanble
 
 
     wrap: (content, htmlclass) ->
@@ -266,10 +265,11 @@ class LParagraph extends LEmpty
 ############
 window.markdown =
 
-    toJson: (text) -> lighter_block_parser.parse_blocks(text)
+    toJson: (text) -> new MarkdownBlockParser(text)
+
     toHtml: (text) ->
-        html = ''
-        parsed_json = lighter_block_parser.parse_blocks(text)
+        parsed_html = ''
+        parsed_json = @toJson(text)
         for block in parsed_json
-            html += block.toHtml() + '</br>'
-        html
+            parsed_html += block.toHtml() + '</br>'
+        parsed_html

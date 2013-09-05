@@ -1,6 +1,6 @@
 describe 'Various parsing helepers', ->
 
-    h = lighter_block_parser
+    h = MarkdownBlockParser.prototype
 
     describe 'can_be_nested', ->
         it 'with undefined', -> expect(h.can_be_nested(undefined)).toBe(false)

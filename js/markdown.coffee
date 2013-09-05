@@ -16,14 +16,14 @@ lighter_markdown_parser =
 
     loop: ->
 
-        @parse_one()
+        @parse_block()
 
         @index++
         # recrusiveluy call for parser
         # If we are on the end return the parsed stuff
         if @blocks.length > @index then @loop() else @blocks
 
-    parse_one: ->
+    parse_block: ->
         current = @blocks[@index];
         block_parsed = false
 
@@ -131,12 +131,6 @@ lighter_markdown_parser =
             new LQuote(
                 mark: current[0]
                 content: current.substr(1))
-
-        empty: ->
-            current = @blocks[@index]
-
-            return false if current.trim().length
-            new LEmpty(content: current)
 
         # The indented codeblock
         codeblock: ->

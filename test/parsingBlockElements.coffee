@@ -4,7 +4,7 @@ describe 'Testing markdown block elements', ->
     mock = blocks: [], index: 0
     # call a parser with shimmed object
     run = (parser) ->
-        markdown.parsers[parser].call mock
+        lighter_markdown_parser.block[parser].call mock
 
     beforeEach ->
         mock.blocks = []

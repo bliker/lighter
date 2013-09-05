@@ -1,6 +1,7 @@
-window.markdown =
+# Keeping this private
+lighter_markdown_parser =
 
-    parse: (text) ->
+    parse: (string) ->
         blocks = text.split('\n')
         return text if blocks.length == 0
 
@@ -9,16 +10,13 @@ window.markdown =
         @blocks = blocks
         @index  = 0
 
-        json_blocks = @createJson()
-        html_blocks = @createHtml()
+        @doparsing()
 
-        return html_blocks
-
-    # Create Json form markdown text
-    createJson: ->
-        current_block = @blocks[@index];
-        console.log('Parsing block:', current_block);
+    doparsing: ->
+        current = @blocks[@index];
+        console.log('Parsing block:', current);
         block_parsed = false
+
         for k, parser of @parsers
             parsed = parser.apply(this)
 
@@ -28,28 +26,17 @@ window.markdown =
                 block_parsed = true
                 break
 
-        ## Not parsed by regular stuff, must be paragrpah
+        # Not parsed by regular stuff, must be paragrpah
         if not block_parsed
-            @blocks[@index] = new LParagraph({content: current_block})
+            @blocks[@index] = new LParagraph({content: current})
 
-        # Index
         @index++
-        if @blocks.length > @index
-            # recrusive call for parsing
-            @createJson()
-        else
-            # All blocks are parsed
-            return @blocks
+        # recrusiveluy call for parser
+        # If we are on the end return the parsed stuff
+        if @blocks.length > @index then @doparsing() else @blocks
 
-    createHtml: ->
-        newtext = ''
-        for block in @blocks
-            newtext += block.toHtml() + '</br>'
-
-        return newtext
-
-    parsers:
-
+    # Block level parsers
+    block:
         atxheading: ->
             current = @blocks[@index]
             return false if current[0] isnt '#'
@@ -58,11 +45,10 @@ window.markdown =
             i++ while current[i] is '#' and i < 6
 
             # mark + content
-            new LAtxHeading({
+            new LAtxHeading(
                 mark: current.substr(0, i),
                 content: current.substr(i)
-                type: i
-            })
+                type: i)
 
         setextheading: ->
             current = @blocks[@index]
@@ -77,17 +63,15 @@ window.markdown =
             i++ while next[i] is next[0]
             return false if i isnt next.trim().length
 
-            @blocks[@index] = new LSetextHeading({
+            @blocks[@index] = new LSetextHeading(
                 content: current,
-                type: char + 1
-            })
+                type: char + 1)
 
             # Blockskipping
             @index++
-            new LSetextHeading({
+            new LSetextHeading(
                 mark: next
-                type: char + 1
-            })
+                type: char + 1)
 
         ulist: ->
             current = @blocks[@index]
@@ -98,15 +82,14 @@ window.markdown =
                 i++ while @is_whitespace(current[i])
 
             valid_char = ['*', '-', '+'].indexOf(current[i]) > -1
-            space_after = current[i+1] is " ";
+            space_after = current[i+1] is " "
 
             if not valid_char or not space_after
                 return false
 
-            new LUnorderedList({
+            new LUnorderedList(
                 mark: current.substr(0, i)
-                content: current.substr(i)
-            });
+                content: current.substr(i))
 
         olist: ->
             current = @blocks[@index]
@@ -123,10 +106,9 @@ window.markdown =
 
             return false if not numeric or not with_dot_after
 
-            new LOrderedList({
+            new LOrderedList(
                 mark: current.substr(0, i+1)
-                content: current.substr(i+1)
-            })
+                content: current.substr(i+1))
 
         quote: ->
             current = @blocks[@index]
@@ -134,17 +116,15 @@ window.markdown =
             return false if (current[0] isnt '>') or (current[1] isnt " ")
             # Nested quotes not supported yet!
 
-            new LQuote({
+            new LQuote(
                 mark: current[0]
-                content: current.substr(1)
-            })
+                content: current.substr(1))
 
         empty: ->
             current = @blocks[@index]
 
             return false if current.trim().length
-
-            new LEmpty({content: current})
+            new LEmpty(content: current)
 
         # The indented codeblock
         codeblock: ->
@@ -160,24 +140,29 @@ window.markdown =
             i++ while current[i] is ' '
             return false if i < 4 and current[0] isnt '\t'
 
-            new LCodeblock({content: current})
+            new LCodeblock(content: current)
 
         codeblockg: ->
             current = @blocks[@index]
 
             return false if not open_backticks = @is_codeblock_seq(current)
-            @blocks[@index] = new LGithubCodeblock({mark: current})
+            @blocks[@index] = new LGithubCodeblock(mark: current)
 
             # Non sandard block skipping in here
+            # I miss pointers here
             @index++
             while @blocks[@index] and not close_backticks = @is_codeblock_seq(@blocks[@index])
-                @blocks[@index] =  new LGithubCodeblock({content: @blocks[@index]})
+                @blocks[@index] =  new LGithubCodeblock(content: @blocks[@index])
                 @index++
 
             # Last block has to be returned instead of assgined
-            new LGithubCodeblock({mark: @blocks[@index]});
+            new LGithubCodeblock(mark: @blocks[@index])
 
 
+
+    ############
+    # Helper methods in object root for convinience
+    ##########
 
     # has ul or ol before?
     can_be_nested: (prev) ->
@@ -206,62 +191,16 @@ window.markdown =
         # Backtics have to be lonely
         i > 2 and i is block.length
 
+############
+# Public API
+############
+window.markdown =
 
-class LNode
-    constructor: (data) ->
-        @_mark = data.mark
-        @_content = data.content
-        @_type = data.type
-
-    wrap: (content, htmlclass) ->
-        htmlclass = @htmlclass unless htmlclass
-        '<span class="lighter_'+htmlclass+'">'+content+'</span>'
-
-    mark: -> @wrap(@_mark, 'mark')
-    content: -> @_content
-    type: -> @_type
-
-###### Element classes
-
-class LAtxHeading extends LNode
-    toHtml: -> @wrap(@mark() + @content(), 'h' + @type())
-
-class LSetextHeading extends LNode
+    toJson: (text) -> lighter_markdown_parser.parse()
     toHtml: ->
-        if @_mark
-            @wrap(@mark(), 'sh' + @type())
-        else
-            @wrap(@content(), 'sh' + @type())
+        html = ''
+        parsed_json = lighter_markdown_parser.parse()
+        for i in array
+            html += parsed_json[i].toHtml()
 
-class LUnorderedList extends LNode
-    htmlclass: 'ul'
-    toHtml: -> @wrap(@mark() + @content())
-
-class LOrderedList extends LUnorderedList
-    htmlclass: 'ol'
-
-class LQuote extends LUnorderedList
-    htmlclass: 'quote'
-
-###### Code
-
-class LCodeblock extends LNode
-    htmlclass: 'code'
-    toHtml: -> @wrap(@content())
-
-class LGithubCodeblock extends LNode
-    htmlclass: 'code'
-    toHtml: ->
-        if @_mark
-            return @mark()
-        else
-            return @wrap(@content())
-
-###### Empty
-
-class LEmpty extends LNode
-    toHtml: -> @content()
-
-class LParagraph extends LEmpty
-
-
+        html

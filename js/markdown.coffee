@@ -89,11 +89,9 @@ class MarkdownBlockParser
             if @can_be_nested(@blocks[@index-1])
                 i++ while @is_whitespace(current[i])
 
-            valid_char = ['*', '-', '+'].indexOf(current[i]) > -1
-            space_after = current[i+1] is " "
-
-            if not valid_char or not space_after
-                return false
+            valid_char = current[i] in ['*', '-', '+']
+            space_after = current[i+1] and current[i+1] is " "
+            return false if not valid_char or not space_after
 
             new LUnorderedList(
                 mark: current.substr(0, i)
@@ -111,7 +109,6 @@ class MarkdownBlockParser
 
             numeric = i > 0
             with_dot_after = current[i] is '.'
-
             return false if not numeric or not with_dot_after
 
             new LOrderedList(
@@ -167,7 +164,7 @@ class MarkdownBlockParser
     # has ul or ol before?
     can_be_nested: (prev) ->
         return false unless prev
-        prev and ['ol', 'ul'].indexOf(prev.type) > -1
+        prev and prev.type in ['ol', 'ul']
 
     # check is character is indeed a whitespace
     is_whitespace: (char) ->

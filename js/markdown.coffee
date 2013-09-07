@@ -2,7 +2,7 @@
 class MarkdownBlockParser
 
     constructor: (text) ->
-        return new LEmpty(content: text) if not text or text.trim().length is 0
+        return new Markdown.Empty(content: text) if not text or text.trim().length is 0
 
         blocks = text.split('\n')
         # tracks where in parsed file are we
@@ -24,7 +24,7 @@ class MarkdownBlockParser
         block_parsed = false
 
         if current.trim().length is 0
-            @blocks[@index] = new LEmpty({content: current})
+            @blocks[@index] = new Markdown.Empty({content: current})
             return
 
         for k, parser of @parsers
@@ -39,7 +39,7 @@ class MarkdownBlockParser
 
         # Not parsed by regular stuff, must be paragrpah
         if not block_parsed
-            @blocks[@index] = new LParagraph({content: current})
+            @blocks[@index] = new Markdown.Paragraph({content: current})
 
 
     # Block level parsers
@@ -52,7 +52,7 @@ class MarkdownBlockParser
             i++ while current[i] is '#' and i < 6
 
             # mark + content
-            new LAtxHeading(
+            new Markdown.AtxHeading(
                 mark: current.substr(0, i),
                 content: current.substr(i)
                 type: i)
@@ -71,13 +71,13 @@ class MarkdownBlockParser
             i++ while next[i] is next[0]
             return false if i isnt next.trim().length
 
-            @blocks[@index] = new LSetextHeading(
+            @blocks[@index] = new Markdown.SetextHeading(
                 content: current,
                 type: char + 1)
 
             # Blockskipping
             @index++
-            new LSetextHeading(
+            new Markdown.SetextHeading(
                 mark: next
                 type: char + 1)
 
@@ -93,7 +93,7 @@ class MarkdownBlockParser
             space_after = current[i+1] and current[i+1] is " "
             return false if not valid_char or not space_after
 
-            new LUnorderedList(
+            new Markdown.UnorderedList(
                 mark: current.substr(0, i)
                 content: current.substr(i))
 
@@ -111,7 +111,7 @@ class MarkdownBlockParser
             with_dot_after = current[i] is '.'
             return false if not numeric or not with_dot_after
 
-            new LOrderedList(
+            new Markdown.OrderedList(
                 mark: current.substr(0, i+1)
                 content: current.substr(i+1))
 
@@ -121,7 +121,7 @@ class MarkdownBlockParser
             return false if (current[0] isnt '>') or (current[1] isnt " ")
             # Nested quotes not supported yet!
 
-            new LQuote(
+            new Markdown.Quote(
                 mark: current[0]
                 content: current.substr(1))
 
@@ -139,23 +139,23 @@ class MarkdownBlockParser
             i++ while current[i] is ' '
             return false if i < 4 and current[0] isnt '\t'
 
-            new LCodeblock(content: current)
+            new Markdown.Codeblock(content: current)
 
         codeblockg: ->
             current = @blocks[@index]
 
             return false if not open_backticks = @is_codeblock_seq(current)
-            @blocks[@index] = new LGithubCodeblock(mark: current)
+            @blocks[@index] = new Markdown.GithubCodeblock(mark: current)
 
             # Non sandard block skipping in here
             # I miss pointers here
             @index++
             while @blocks[@index] and not close_backticks = @is_codeblock_seq(@blocks[@index])
-                @blocks[@index] =  new LGithubCodeblock(content: @blocks[@index])
+                @blocks[@index] =  new Markdown.GithubCodeblock(content: @blocks[@index])
                 @index++
 
             # Last block has to be returned instead of assgined
-            new LGithubCodeblock(mark: @blocks[@index])
+            new Markdown.GithubCodeblock(mark: @blocks[@index])
 
     ############
     # Helper methods in object root for convinience
@@ -188,78 +188,6 @@ class MarkdownBlockParser
         # Backtics have to be lonely
         i > 2 and i is block.length
 
-
-############
-# Base class
-############
-
-class LNode
-
-    constructor: (data) ->
-        @_mark = data.mark
-        @_type = data.type
-        @_content = data.content
-        # if data.spanble
-
-
-    wrap: (content, htmlclass) ->
-        htmlclass = @htmlclass unless htmlclass
-        '<span class="lighter_'+htmlclass+'">'+content+'</span>'
-
-    mark: -> @wrap(@_mark, 'mark')
-
-    content: -> @_content
-
-    type: -> @_type
-
-############
-# Block level classes
-############
-
-class LAtxHeading extends LNode
-    toHtml: -> @wrap(@mark() + @content(), 'h' + @type())
-
-class LSetextHeading extends LNode
-    toHtml: ->
-        if @_mark
-            @wrap(@mark(), 'sh' + @type())
-        else
-            @wrap(@content(), 'sh' + @type())
-
-class LUnorderedList extends LNode
-    htmlclass: 'ul'
-    toHtml: -> @wrap(@mark() + @content())
-
-class LOrderedList extends LUnorderedList
-    htmlclass: 'ol'
-
-class LQuote extends LUnorderedList
-    htmlclass: 'quote'
-
-############
-# Code Blocks
-############
-
-class LCodeblock extends LNode
-    htmlclass: 'code'
-    toHtml: -> @wrap(@content())
-
-class LGithubCodeblock extends LNode
-    htmlclass: 'code'
-    toHtml: -> if @_mark then @mark() else @wrap(@content())
-
-############
-# Special Block level
-############
-
-class LEmpty extends LNode
-    toHtml: -> if @content() then @content() else ''
-
-class LParagraph extends LEmpty
-
-############
-# Public API
-############
 window.markdown =
 
     toJson: (text) -> new MarkdownBlockParser(text)
